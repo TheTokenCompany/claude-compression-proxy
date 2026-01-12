@@ -28,10 +28,10 @@ Done! Now use `claude-c` instead of `claude`.
 
 ```bash
 # Use Claude with compression
-claude-c "help me write a function"
+claude-c
 
 # Adjust compression level (0-1, higher = more compression)
-claude-c -0.8 "refactor this code"
+claude-c -0.8
 ```
 
 ## Requirements
@@ -45,7 +45,7 @@ claude-c -0.8 "refactor this code"
 ```
 Claude Code → Claude Compressor (localhost:8877) → Anthropic API
                      ↓
-              Compress via Token Company API
+              Compress via The Token Company API
 ```
 
 The `claude-c` wrapper automatically starts the Docker container and routes your requests through the compression proxy.
