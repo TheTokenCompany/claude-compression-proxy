@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  claude-compressor:
+    build: .
+    container_name: claude-compressor
+    ports:
+      - "8877:8877"
+    environment:
+      - TTC_KEY=${TTC_KEY}
+      - COMPRESSION_THRESHOLD=${COMPRESSION_THRESHOLD:-0.6}
+      - MIN_TEXT_LENGTH=${MIN_TEXT_LENGTH:-150}
+      - INTERCEPTOR_PORT=8877
+    restart: unless-stopped
+    volumes:
+      - ${HOME}/claude-compressor.log:/root/claude-compressor.log

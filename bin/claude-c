@@ -1,0 +1,84 @@
+#!/bin/bash
+# Claude Compressor CLI Wrapper
+# Usage: claude-c [-THRESHOLD] [claude arguments...]
+# Example: claude-c -0.8 "help me code"
+
+set -e
+
+CONTAINER_NAME="claude-compressor"
+PORT="${INTERCEPTOR_PORT:-8877}"
+COMPRESSION_THRESHOLD="${COMPRESSION_THRESHOLD:-0.6}"
+
+# Parse threshold argument if provided
+if [[ "$1" =~ ^-[0-9]+\.?[0-9]*$ ]]; then
+    COMPRESSION_THRESHOLD="${1#-}"
+    shift
+fi
+
+# Check if Docker is running
+if ! docker info >/dev/null 2>&1; then
+    echo "❌ Docker is not running. Please start Docker first."
+    exit 1
+fi
+
+# Check if container exists and is running
+if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+    echo "🚀 Starting Claude Compressor container..."
+
+    # Check if container exists but is stopped
+    if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+        # Remove old container to pick up new environment variables
+        docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1
+    fi
+
+    # Start new container with current environment
+    docker run -d \
+        --name "$CONTAINER_NAME" \
+        -p "${PORT}:8877" \
+        -e TTC_KEY="${TTC_KEY}" \
+        -e COMPRESSION_THRESHOLD="${COMPRESSION_THRESHOLD}" \
+        -e MIN_TEXT_LENGTH="${MIN_TEXT_LENGTH:-150}" \
+        -v "${HOME}/claude-compressor.log:/root/claude-compressor.log" \
+        claude-compressor:latest >/dev/null 2>&1
+
+    # Wait for container to be ready
+    echo "⏳ Waiting for proxy to start..."
+    for i in {1..10}; do
+        if curl -s --connect-timeout 1 "http://127.0.0.1:${PORT}" >/dev/null 2>&1; then
+            break
+        fi
+        sleep 0.5
+    done
+
+    echo "✅ Claude Compressor ready (threshold: ${COMPRESSION_THRESHOLD})"
+else
+    # Container is running, check if we need to restart with new threshold
+    CURRENT_THRESHOLD=$(docker inspect "$CONTAINER_NAME" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep COMPRESSION_THRESHOLD | cut -d= -f2)
+
+    if [[ "$CURRENT_THRESHOLD" != "$COMPRESSION_THRESHOLD" ]]; then
+        echo "🔄 Restarting container with new threshold: ${COMPRESSION_THRESHOLD}"
+        docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1
+
+        docker run -d \
+            --name "$CONTAINER_NAME" \
+            -p "${PORT}:8877" \
+            -e TTC_KEY="${TTC_KEY}" \
+            -e COMPRESSION_THRESHOLD="${COMPRESSION_THRESHOLD}" \
+            -e MIN_TEXT_LENGTH="${MIN_TEXT_LENGTH:-150}" \
+            -v "${HOME}/claude-compressor.log:/root/claude-compressor.log" \
+            claude-compressor:latest >/dev/null 2>&1
+
+        echo "⏳ Waiting for proxy to start..."
+        for i in {1..10}; do
+            if curl -s --connect-timeout 1 "http://127.0.0.1:${PORT}" >/dev/null 2>&1; then
+                break
+            fi
+            sleep 0.5
+        done
+
+        echo "✅ Claude Compressor ready (threshold: ${COMPRESSION_THRESHOLD})"
+    fi
+fi
+
+# Run Claude with the proxy
+ANTHROPIC_BASE_URL="http://127.0.0.1:${PORT}" claude "$@"
