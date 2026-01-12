@@ -5,13 +5,16 @@ Save tokens and money by compressing Claude Code API requests using [The Token C
 ## Setup (3 steps)
 
 **1. Install**
+
+Clone the repository and run
 ```bash
-git clone https://github.com/YOUR_USERNAME/claude-compressor.git
-cd claude-compressor
 ./install.sh
 ```
 
 **2. Add your API key to `~/.zshrc` or `~/.bashrc`**
+
+Get compression API key from [The Token Company](https://thetokencompany.com)
+
 ```bash
 export TTC_KEY="your_token_company_api_key"
 export PATH="$HOME/.local/bin:$PATH"
