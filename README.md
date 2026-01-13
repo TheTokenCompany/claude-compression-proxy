@@ -4,7 +4,7 @@ Save tokens and money by compressing Claude Code API requests using [The Token C
 
 Code understanding works extremely well with medium compression aggressiveness (0.1 - 0.6) improving Claude Code subscription quota up to 66 %.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/iLs7nMgEc7Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+[![Watch the video](https://img.youtube.com/vi/iLs7nMgEc7Q/maxresdefault.jpg)](https://www.youtube.com/watch?v=iLs7nMgEc7Q)
 
 ## Setup (3 steps)
 
