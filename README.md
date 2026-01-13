@@ -2,6 +2,8 @@
 
 Save tokens and money by compressing Claude Code API requests using [The Token Company](https://thetokencompany.com) API.
 
+Code understanding works extremely well with medium compression aggressiveness (0.1 - 0.6) improving Claude Code subscription quota up to 66 %.
+
 ## Setup (3 steps)
 
 **1. Install**
