@@ -57,14 +57,14 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Handle application lifespan events."""
     # Startup
-    logger.info("🚀 Claude Compressor starting...")
+    logger.info("--> Claude Compressor starting")
     logger.info(
-        f"📋 Port: {config['port']}, Threshold: {config['compression_threshold']}, "
+        f"    Port: {config['port']}, Threshold: {config['compression_threshold']}, "
         f"Min length: {config['min_text_length']}"
     )
 
     if not config["ttc_key"]:
-        logger.warning("⚠️  TTC_KEY not set - compression disabled, acting as passthrough proxy")
+        logger.warning("[WARN] TTC_KEY not set - compression disabled, acting as passthrough proxy")
 
     logger.info("=" * 50)
     logger.info(f"To use: ANTHROPIC_BASE_URL=http://127.0.0.1:{config['port']} claude")
@@ -73,7 +73,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
-    logger.info("\n👋 Shutting down...")
+    logger.info("\n<-- Shutting down")
     log_stats()
 
 
@@ -89,7 +89,7 @@ def log_stats():
         else 0
     )
     logger.info(
-        f"📊 Stats: {stats['requests']} requests, {stats['compressed']} compressed, "
+        f"[stats] {stats['requests']} requests, {stats['compressed']} compressed, "
         f"{stats['tokens_saved']} tokens saved ({savings}% reduction), uptime {uptime}s"
     )
 
@@ -123,7 +123,7 @@ async def compress_text(text: str) -> Dict[str, Any]:
                 data = response.json()
                 if data.get("output") and data.get("output_tokens", 0) < data.get("original_input_tokens", 0):
                     saved = data["original_input_tokens"] - data["output_tokens"]
-                    logger.info(f"   ✨ {data['original_input_tokens']} → {data['output_tokens']} tokens (-{saved})")
+                    logger.info(f"    >>> {data['original_input_tokens']} -> {data['output_tokens']} tokens (-{saved})")
                     return {
                         "text": data["output"],
                         "saved": saved,
@@ -131,7 +131,7 @@ async def compress_text(text: str) -> Dict[str, Any]:
                     }
 
     except Exception as e:
-        logger.error(f"   ❌ Compression API error: {e}")
+        logger.error(f"    [!] Compression API error: {e}")
 
     return {"text": text, "saved": 0, "original": 0}
 
@@ -148,7 +148,7 @@ async def process_payload(body_str: str) -> Dict[str, Any]:
         if "messages" not in body:
             return {"body": body_str, "total_saved": 0, "total_original": 0}
 
-        logger.info(f"🔍 Processing {len(body['messages'])} messages")
+        logger.info(f"... Processing {len(body['messages'])} messages")
 
         total_saved = 0
         total_original = 0
@@ -192,7 +192,7 @@ async def process_payload(body_str: str) -> Dict[str, Any]:
                 total_original += result["original"]
 
         if total_saved > 0:
-            logger.info(f"✅ Saved {total_saved} tokens this request")
+            logger.info(f"[OK] Saved {total_saved} tokens this request")
 
         return {
             "body": json.dumps(body),
@@ -201,7 +201,7 @@ async def process_payload(body_str: str) -> Dict[str, Any]:
         }
 
     except Exception as e:
-        logger.error(f"❌ Payload processing error: {e}")
+        logger.error(f"[!] Payload processing error: {e}")
         return {"body": body_str, "total_saved": 0, "total_original": 0}
 
 
@@ -217,7 +217,7 @@ async def proxy(request: Request, path: str):
     is_messages_endpoint = "/messages" in url_path and request.method == "POST"
 
     if is_messages_endpoint:
-        logger.info(f"\n🎯 {request.method} {url_path}")
+        logger.info(f"\n>>> {request.method} {url_path}")
 
     # Read request body
     body = await request.body()
@@ -259,7 +259,7 @@ async def proxy(request: Request, path: str):
             )
 
     except Exception as e:
-        logger.error(f"❌ Forward error: {e}")
+        logger.error(f"[!] Forward error: {e}")
         return Response(
             content=json.dumps({"error": "Bad Gateway", "message": str(e)}),
             status_code=502,
