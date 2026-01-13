@@ -1,4 +1,4 @@
-# Claude Compressor (save up to 66% on your Claude subcsription quota)
+# Claude Compression Proxy
 
 Save tokens and money by compressing Claude Code API requests using [The Token Company](https://thetokencompany.com) API.
 
